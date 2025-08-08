@@ -3,17 +3,17 @@
   "version": "8.4.0",
   "private": true,
   "license": "AGPLv3",
-  "homepage": "https://github.com/mx-space/core/tree/master/apps/core#readme",
+  "homepage": "https://github.com/rowania/core-of-Mix-Space/apps/core#readme",
   "repository": {
-    "directory": "mx-space/core",
-    "url": "https://github.com/mx-space/core"
+    "directory": "rowania/core-of-Mix-Space",
+    "url": "https://github.com/rowania/core-of-Mix-Space"
   },
-  "author": "Innei <https://innei.in>",
+  "author": "innei <https://github.com/innei/Shiro>",
   "dashboard": {
-    "repo": "mx-space/mx-admin",
-    "version": "4.10.1"
+    "repo": "rowania/mx-admin",
+    "version": "latest"
   },
-  "issues": "https://github.com/mx-space/core/issues",
+  "issues": "https://github.com/rowania/core-of-Mix-Space/issues",
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",
