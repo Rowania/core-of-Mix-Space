@@ -28,6 +28,24 @@ export class MockCacheService {
 }
 
 const createMockRedis = async () => {
+  // 在CI环境中使用真实的Redis服务
+  if (process.env.CI || process.env.SKIP_REDIS_MEMORY_SERVER) {
+    console.warn('Using external Redis service in CI environment')
+    // 连接CI环境中的Redis服务（默认localhost:6379）
+    const cacheService = new MockCacheService(6379, 'localhost')
+    
+    return {
+      connect: () => null,
+      CacheService: cacheService,
+      RedisService: cacheService,
+      token: CacheService,
+      async close() {
+        await cacheService.getClient().flushall()
+        await cacheService.getClient().quit()
+      },
+    }
+  }
+
   const redisServer = new RedisMemoryServer({})
 
   const redisHost = await redisServer.getHost()

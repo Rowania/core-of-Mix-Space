@@ -26,6 +26,8 @@ export default defineConfig({
     setupFiles: [resolve(__dirname, './test/setup-global.ts')],
     environment: 'node',
     includeSource: [resolve(__dirname, './test')],
+    testTimeout: 30000,
+    hookTimeout: 30000,
   },
   optimizeDeps: {
     needsInterop: ['lodash'],

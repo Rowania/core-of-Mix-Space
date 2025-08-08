@@ -91,3 +91,4 @@ jobs:
         run: npm run test
         env:
           CI: true
+          SKIP_REDIS_MEMORY_SERVER: true
