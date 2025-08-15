@@ -4,7 +4,9 @@ import { Controller } from '@nestjs/common'
 
 import { API_VERSION } from '~/app.config'
 
-export const apiRoutePrefix = `/api/v${API_VERSION}`
+import { isDev } from '~/global/env.global'
+
+export const apiRoutePrefix = isDev ? '' : `/api/v${API_VERSION}`
 export const ApiController: (
   optionOrString?: string | string[] | undefined | ControllerOptions,
 ) => ReturnType<typeof Controller> = (...rest) => {
