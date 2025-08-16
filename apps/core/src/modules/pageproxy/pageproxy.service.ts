@@ -70,7 +70,7 @@ export class PageProxyService {
 
     // Determine the base API URL
     const baseApiUrl =
-      BASE_API || `location.origin + '${!isDev ? `/api/v${API_VERSION}` : ''}'`
+      BASE_API || `location.origin + '/api/v${API_VERSION}'`
 
     // Determine the gateway URL
     const gatewayUrl = GATEWAY || 'location.origin'
@@ -139,7 +139,7 @@ export class PageProxyService {
     const url = config.url
 
     return {
-      BASE_API: isDev ? '/' : `/api/v${API_VERSION}`,
+      BASE_API: `/api/v${API_VERSION}`,
 
       // BASE_API: url.serverUrl || (isDev ? '/' : '/api/v2'),
       GATEWAY: url.wsUrl,
