@@ -15,7 +15,8 @@ export function getAvatar(mail: string | undefined) {
   if (!mail) {
     return ''
   }
-  return `https://cravatar.cn/avatar/${md5(mail)}?d=retro`
+  const hash = md5(mail)
+  return `https://api.dicebear.com/9.x/shapes/svg?backgroundType=gradientLinear&seed=${hash}&size=200`
 }
 
 export function sleep(ms: number) {
