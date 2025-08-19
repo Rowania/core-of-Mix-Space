@@ -88,7 +88,10 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
       next()
       return
     }
-    if (req.method !== 'GET' && req.method !== 'POST') {
+    
+    // 支持所有 HTTP 方法，不再限制只有 GET 和 POST
+    // Better-auth 需要支持各种方法，包括 sign-out 等
+    if (!['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'].includes(req.method || '')) {
       next()
       return
     }

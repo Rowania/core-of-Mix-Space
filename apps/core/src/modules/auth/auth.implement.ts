@@ -63,6 +63,8 @@ export async function CreateAuth(
     },
     session: {
       modelName: AUTH_JS_SESSION_COLLECTION,
+      expiresIn: 60 * 60 * 24 * 7, // 7 days
+      updateAge: 60 * 60 * 24, // 1 day
     },
     appName: 'mx-core',
     secret: SECURITY.jwtSecret,
@@ -149,7 +151,14 @@ export async function CreateAuth(
 
   const handler = async (req: IncomingMessage, res: ServerResponse) => {
     try {
-      // cors - 更完整的 CORS 设置
+      console.log(`[Auth Handler] ${req.method} ${req.originalUrl}`)
+      console.log(`[Auth Handler] Headers:`, {
+        origin: req.headers.origin,
+        cookie: req.headers.cookie ? 'present' : 'none',
+        'content-type': req.headers['content-type']
+      })
+
+      // CORS 设置
       const origin = req.headers.origin
       const allowedOrigins = CROSS_DOMAIN.allowedOrigins.reduce(
         (acc: string[], allowedOrigin: string) => {
@@ -184,11 +193,9 @@ export async function CreateAuth(
       }
 
       const clonedRequest = new IncomingMessage(req.socket)
-      const handler = toNodeHandler(auth)(
+      const nodeHandler = toNodeHandler(auth)(
         Object.assign(clonedRequest, req, {
           url: req.originalUrl,
-
-          // https://github.com/Bekacru/better-call/blob/main/src/adapter/node.ts
           socket: Object.assign(req.socket, {
             encrypted: isDev ? false : true,
           }),
@@ -196,11 +203,21 @@ export async function CreateAuth(
         res,
       )
 
-      return handler
+      return nodeHandler
     } catch (error) {
-      console.error(error)
-      // throw error
-      res.end(error.message)
+      console.error(`[Auth Handler Error] ${req.method} ${req.originalUrl}:`, error)
+      console.error('Request headers:', req.headers)
+      console.error('Error stack:', error.stack)
+      
+      res.statusCode = error.status || 500
+      res.setHeader('Content-Type', 'application/json')
+      res.end(JSON.stringify({ 
+        error: 'Authentication handler error',
+        message: error.message || 'Unknown error',
+        path: req.originalUrl,
+        method: req.method,
+        ...(isDev && { stack: error.stack })
+      }))
     }
   }
 
