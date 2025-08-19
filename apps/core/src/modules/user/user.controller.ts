@@ -12,6 +12,7 @@ import {
   Patch,
   Post,
   Put,
+  Req,
 } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
@@ -25,6 +26,7 @@ import { BanInDemo } from '~/common/decorators/demo.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
 import { IsAuthenticated } from '~/common/decorators/role.decorator'
+import { FastifyBizRequest } from '~/transformers/get-req.transformer'
 import { getAvatar } from '~/utils/tool.util'
 
 import { AuthService } from '../auth/auth.service'
@@ -135,8 +137,26 @@ export class UserController {
 
   @Get('check_logged')
   @HttpCache.disable
-  checkLogged(@IsAuthenticated() isAuthenticated: boolean) {
-    return { ok: +isAuthenticated, isGuest: !isAuthenticated }
+  async checkLogged(
+    @IsAuthenticated() isAuthenticated: boolean,
+    @Req() req: FastifyBizRequest,
+  ) {
+    // 如果 JWT 认证通过，直接返回
+    if (isAuthenticated) {
+      return { ok: 1, isGuest: false }
+    }
+
+    // 如果 JWT 认证失败，检查 OAuth session
+    try {
+      const session = await this.authService.getSessionUser(req.raw)
+      if (session?.user?.isOwner) {
+        return { ok: 1, isGuest: false }
+      }
+    } catch {
+      // OAuth session 检查失败，忽略错误
+    }
+
+    return { ok: 0, isGuest: true }
   }
 
   @Patch()
