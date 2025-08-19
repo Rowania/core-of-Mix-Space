@@ -82,6 +82,7 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
       return
     }
 
+    // 只绕过这些特定的路径，让 better-auth 处理所有其他认证相关的路径
     const bypassPath = ['/token', '/session', '/providers']
 
     if (bypassPath.some((path) => req.originalUrl.includes(path))) {

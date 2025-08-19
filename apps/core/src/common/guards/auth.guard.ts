@@ -27,11 +27,26 @@ export class AuthGuard implements CanActivate {
 
     const query = request.query as any
     const headers = request.headers
+    const cookies = request.raw.headers.cookie
 
     const session = await this.authService.getSessionUser(request.raw)
 
-    const Authorization: string =
+    let Authorization: string =
       headers.authorization || headers.Authorization || query.token
+
+    // 如果没有在 header 中找到 token，尝试从 cookie 中获取
+    if (!Authorization && cookies) {
+      const cookieObj = Object.fromEntries(
+        cookies.split(';').map((cookie: string) => {
+          const [name, value] = cookie.trim().split('=')
+          return [name, value]
+        })
+      )
+      
+      if (cookieObj['mx-token']) {
+        Authorization = `bearer ${cookieObj['mx-token']}`
+      }
+    }
 
     if (session) {
       const isOwner = !!session.user?.isOwner
