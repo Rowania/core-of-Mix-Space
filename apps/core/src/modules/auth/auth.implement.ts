@@ -43,6 +43,17 @@ export async function CreateAuth(
       },
       [],
     ),
+    advanced: {
+      cookiePrefix: 'better-auth',
+      ...(process.env.AUTH_COOKIE_DOMAIN && {
+        defaultCookieAttributes: {
+          domain: process.env.AUTH_COOKIE_DOMAIN,
+          secure: !isDev,
+          sameSite: 'lax' as const,
+          httpOnly: true,
+        },
+      }),
+    },
     account: {
       modelName: AUTH_JS_ACCOUNT_COLLECTION,
       accountLinking: {
@@ -138,15 +149,39 @@ export async function CreateAuth(
 
   const handler = async (req: IncomingMessage, res: ServerResponse) => {
     try {
-      // cors
-      res.setHeader(
-        'Access-Control-Allow-Origin',
-        req.headers.origin || req.headers.referer || req.headers.host || '*',
+      // cors - 更完整的 CORS 设置
+      const origin = req.headers.origin
+      const allowedOrigins = CROSS_DOMAIN.allowedOrigins.reduce(
+        (acc: string[], allowedOrigin: string) => {
+          if (allowedOrigin.startsWith('http')) {
+            return [...acc, allowedOrigin]
+          }
+          return [...acc, `https://${allowedOrigin}`, `http://${allowedOrigin}`]
+        },
+        [],
       )
-      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+      
+      if (origin && allowedOrigins.some(allowed => 
+        allowed === origin || 
+        (allowed.includes('*') && origin.includes(allowed.replace('*.', '')))
+      )) {
+        res.setHeader('Access-Control-Allow-Origin', origin)
+      } else if (!origin) {
+        res.setHeader('Access-Control-Allow-Origin', '*')
+      }
+      
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, x-session-uuid')
       res.setHeader('Access-Control-Allow-Credentials', 'true')
       res.setHeader('Access-Control-Max-Age', '86400')
+      res.setHeader('Vary', 'Origin')
+
+      // 处理预检请求
+      if (req.method === 'OPTIONS') {
+        res.statusCode = 204
+        res.end()
+        return
+      }
 
       const clonedRequest = new IncomingMessage(req.socket)
       const handler = toNodeHandler(auth)(
