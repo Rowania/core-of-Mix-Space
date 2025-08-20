@@ -23,8 +23,16 @@ export class BaseOptionController {
   constructor(private readonly configsService: ConfigsService) {}
 
   @Get('/')
-  getOption() {
-    return instanceToPlain(this.configsService.getConfig())
+  async getOption() {
+    const config = await this.configsService.getConfig()
+    const plainConfig = instanceToPlain(config)
+    
+    // 手动添加密码字段的提示信息
+    if (plainConfig.mailOptions && config.mailOptions.pass) {
+      plainConfig.mailOptions.pass = '***SECRET***'
+    }
+    
+    return plainConfig
   }
 
   @HTTPDecorators.Bypass
@@ -46,7 +54,15 @@ export class BaseOptionController {
     if (!value) {
       throw new BadRequestException('key is not exists.')
     }
-    return { data: instanceToPlain(value) }
+    
+    const plainValue = instanceToPlain(value)
+    
+    // 手动处理密码字段
+    if (key === 'mailOptions' && (value as any).pass) {
+      (plainValue as any).pass = '***SECRET***'
+    }
+    
+    return { data: plainValue }
   }
 
   @Patch('/:key')
